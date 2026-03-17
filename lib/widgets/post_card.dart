@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:posts_manager/models/post.dart';
-import 'package:posts_manager/utils/theme.dart';
+import '../models/post.dart';
+import '../utils/theme.dart';
+import '../services/favorites_service.dart';
 
 class PostCard extends StatelessWidget {
   final Post post;
   final VoidCallback onTap;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final bool showFavoriteIcon; // NEW
 
   const PostCard({
     super.key,
@@ -14,6 +16,7 @@ class PostCard extends StatelessWidget {
     required this.onTap,
     required this.onEdit,
     required this.onDelete,
+    this.showFavoriteIcon = true, // Default to true
   });
 
   @override
@@ -31,6 +34,7 @@ class PostCard extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Gradient accent bar
                   Container(
                     width: 4,
                     height: 40,
@@ -49,12 +53,43 @@ class PostCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Post #${post.id}',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppTheme.textSecondary,
-                          ),
+                        Row(
+                          children: [
+                            Text(
+                              'Post #${post.id}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppTheme.textSecondary,
+                              ),
+                            ),
+                            const Spacer(),
+                            // Favorite Icon (NEW)
+                            if (showFavoriteIcon)
+                              IconButton(
+                                icon: Icon(
+                                  FavoritesService.isFavorite(post.id!)
+                                      ? Icons.favorite
+                                      : Icons.favorite_border,
+                                  color: FavoritesService.isFavorite(post.id!)
+                                      ? Colors.red
+                                      : Colors.grey,
+                                  size: 20,
+                                ),
+                                onPressed: () {
+                                  FavoritesService.toggleFavorite(post);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        FavoritesService.isFavorite(post.id!)
+                                            ? 'Added to favorites'
+                                            : 'Removed from favorites',
+                                      ),
+                                      duration: const Duration(seconds: 1),
+                                    ),
+                                  );
+                                },
+                              ),
+                          ],
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -113,7 +148,7 @@ class PostCard extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     return Material(
-      color: color.withOpacity(0.1),
+      color: color.withValues(alpha: 0.1),
       borderRadius: BorderRadius.circular(8),
       child: InkWell(
         onTap: onTap,
